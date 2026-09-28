@@ -127,6 +127,18 @@ th{font-weight:700}
 select{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
 .gap{border-left:6px solid var(--muted);background:var(--paper);padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:15px}
 
+dfn.term{font-style:normal;border-bottom:2px dotted var(--mark);cursor:help}
+dfn.term:hover,dfn.term:focus{background:var(--mark-soft);outline:none}
+#tip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 24px));
+  background:var(--ink);color:var(--paper);border-radius:8px;padding:14px 44px 14px 16px;z-index:30;box-shadow:0 6px 24px rgba(0,0,0,.25);font-size:16px}
+#tip b{display:block;font:600 20px/1.2 var(--display);margin-bottom:4px;color:var(--mark)}
+#tip button{position:absolute;top:8px;right:8px;background:none;border:0;color:var(--paper);font-size:22px;cursor:pointer;line-height:1}
+.gl{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:0 0 8px}
+.gl b{display:block}
+.gl small{color:var(--muted)}
+.search{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);margin-bottom:16px}
+dl.kt{margin:0}dl.kt dt{font-weight:700;margin-top:10px}dl.kt dd{margin:2px 0 0}
+
 </style>
 </head>
 <body>
@@ -135,11 +147,13 @@ select{font:inherit;color:inherit;background:var(--paper);border:1px solid var(-
     <p class="brand">1Z0-1073-26</p>
     <p class="brand-sub">Inventory Cloud 2026 Implementation Professional</p>
     <button class="domain nav-practice" data-v="practice">Practice exam<small>Random questions from the library</small></button>
+    <button class="domain nav-gloss" data-v="glossary">Glossary<small>All terms explained</small></button>
     <div id="domains"></div>
     <button class="theme" id="theme">Switch light / dark</button>
   </nav>
   <main id="main"></main>
 </div>
+<div id="tip" role="dialog" aria-live="polite" hidden></div>
 <script>
 /* ---------- data registry (data files call MOD and QS) ---------- */
 const STUDY={domains:[
@@ -153,9 +167,11 @@ const STUDY={domains:[
   {id:"d8",title:"AI, mobile & Redwood"}
 ],modules:[],bank:[]};
 function MOD(m){STUDY.modules.push(m)}
+function GLOSS(list){STUDY.gloss=list.map(x=>({t:x[0],d:x[1],a:x[2]||[]})).sort((a,b)=>a.t.localeCompare(b.t))}
 /* questions: [question, [correct, wrong, wrong, ...], explanation]. Correct is always first; options are shuffled at runtime. */
 function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,i)=>STUDY.bank.push({id:mid+"-"+(i+1),m:mid,d:m.d,q:x[0],o:x[1],a:0,e:x[2]}))}
 </script>
+<script src="data/glossary.js"></script>
 <script src="data/d1.js"></script>
 <script src="data/d2.js"></script>
 <script src="data/d3.js"></script>
@@ -164,6 +180,8 @@ function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,
 <script src="data/d6d7.js"></script>
 <script>
 /* ================= SHELL ================= */
+
+
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const $=s=>document.querySelector(s);
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -188,11 +206,43 @@ function renderNav(){
     if(!mods.length) return `<p class="dhead off">${d.title}</p><button class="domain" disabled><small>Not added yet</small></button>`;
     return `<p class="dhead">${d.title}</p>`+mods.map(m=>{const b=best["m:"+m.id];return `<button class="domain" data-m="${m.id}" aria-current="${view.v==="module"&&view.id===m.id}">${m.title}${b!=null?`<span class="pct">${b}%</span>`:""}</button>`}).join("");
   }).join("");
-  document.querySelector(".nav-practice").setAttribute("aria-current",view.v!=="module");
+  document.querySelector(".nav-practice").setAttribute("aria-current",view.v==="practice"||view.v==="run"||view.v==="result");document.querySelector(".nav-gloss").setAttribute("aria-current",view.v==="glossary");
   document.querySelectorAll(".domain[data-m]").forEach(b=>b.onclick=()=>go({v:"module",id:b.dataset.m}));
 }
-function go(v){view=v;renderNav();({module:renderModule,practice:renderSetup,run:renderRun,result:renderResult})[v.v]();$("#nav").classList.remove("open");window.scrollTo(0,0)}
-const menuBtn=`<button class="menu-btn" onclick="document.getElementById('nav').classList.add('open')">Menu</button>`;
+function go(v){view=v;renderNav();({module:renderModule,practice:renderSetup,run:renderRun,result:renderResult,glossary:renderGlossary})[v.v]();$("#tip").hidden=true;$("#nav").classList.remove("open");window.scrollTo(0,0)}
+/*MB*/const menuBtn=`<button class="menu-btn" onclick="document.getElementById('nav').classList.add('open')">Menu</button>`;
+
+/* ---------- glossary highlighting ---------- */
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\\/]/g,"\\$&");
+const GPAT=(STUDY.gloss||[]).flatMap((g,i)=>[g.t,...g.a].map(n=>({i,n,re:new RegExp("(^|[^A-Za-z0-9])("+esc(n)+"(?:e?s)?)(?![A-Za-z0-9])",/[a-z]/.test(n)?"i":"")}))).sort((x,y)=>y.n.length-x.n.length);
+function annotate(root,found){
+  root.querySelectorAll(".sec-body").forEach(sec=>{
+    const used=new Set();
+    for(const p of GPAT){
+      if(used.has(p.i)) continue;
+      const w=document.createTreeWalker(sec,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest("dfn,figure,.src,.gap")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+      let n;
+      while((n=w.nextNode())){
+        const m=p.re.exec(n.nodeValue); if(!m) continue;
+        const start=m.index+m[1].length, word=m[2];
+        const after=n.splitText(start); after.nodeValue=after.nodeValue.slice(word.length);
+        const d=document.createElement("dfn"); d.className="term"; d.tabIndex=0; d.dataset.g=p.i; d.textContent=word; d.title=STUDY.gloss[p.i].d;
+        after.parentNode.insertBefore(d,after);
+        used.add(p.i); found.add(p.i); break;
+      }
+    }
+  });
+}
+function showTip(i){const g=STUDY.gloss[i],t=$("#tip");t.innerHTML=`<b>${g.t}</b>${g.d}<button aria-label="Close">×</button>`;t.hidden=false;t.querySelector("button").onclick=()=>t.hidden=true}
+document.addEventListener("click",e=>{const d=e.target.closest("dfn.term");if(d){showTip(+d.dataset.g);return}if(!e.target.closest("#tip"))$("#tip").hidden=true});
+document.addEventListener("keydown",e=>{const d=e.target.closest&&e.target.closest("dfn.term");if(d&&(e.key==="Enter"||e.key===" ")){e.preventDefault();showTip(+d.dataset.g)}if(e.key==="Escape")$("#tip").hidden=true});
+
+function renderGlossary(){
+  $("#main").innerHTML=`${menuBtn}<h1>Glossary</h1><p class="lede">${STUDY.gloss.length} terms used in the study notes. In the modules, terms with a dotted underline can be tapped for their definition.</p>
+  <input class="search" id="gq" type="search" placeholder="Search terms" aria-label="Search terms"><div id="gl"></div>`;
+  const draw=q=>{q=q.toLowerCase();$("#gl").innerHTML=STUDY.gloss.filter(g=>!q||(g.t+" "+g.a.join(" ")+" "+g.d).toLowerCase().includes(q)).map(g=>`<div class="gl"><b>${g.t}${g.a.length?` <small>(${g.a.join(", ")})</small>`:""}</b>${g.d}</div>`).join("")||"<p class='note'>No matching terms.</p>"};
+  $("#gq").oninput=e=>draw(e.target.value); draw("");
+}
 
 function renderModule(){
   const m=modOf(view.id), n=pool("m:"+m.id).length;
@@ -201,6 +251,9 @@ function renderModule(){
     <ul class="topics" aria-label="Exam topics covered">${m.topics.map(t=>`<li>${t}</li>`).join("")}</ul>
     ${m.sections.map((s,i)=>`<details class="sec" ${i===0?"open":""}><summary>${s.t}</summary><div class="sec-body">${s.h}</div></details>`).join("")}
     <div class="actions"><button class="primary" id="mq">Practise this topic (${Math.min(n,10)} of ${n} questions)</button></div>`;
+  const found=new Set(); annotate($("#main"),found);
+  if(found.size){const kt=[...found].map(i=>STUDY.gloss[i]).sort((x,y)=>x.t.localeCompare(y.t));
+    $("#main .actions").insertAdjacentHTML("beforebegin",`<details class="sec"><summary>Key terms in this module (${kt.length})</summary><div class="sec-body"><dl class="kt">${kt.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl></div></details>`)}
   $("#mq").onclick=()=>start("m:"+m.id,10);
 }
 
@@ -282,6 +335,7 @@ function renderResult(){
 }
 
 document.querySelector(".nav-practice").onclick=()=>go({v:"practice"});
+document.querySelector(".nav-gloss").onclick=()=>go({v:"glossary"});
 const t=store.get("theme");if(t)document.documentElement.dataset.theme=t;
 $("#theme").onclick=()=>{const d=document.documentElement.dataset.theme?document.documentElement.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;const n=d?"light":"dark";document.documentElement.dataset.theme=n;store.set("theme",n)};
 go(view);
