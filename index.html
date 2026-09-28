@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1Z0-1073-26 Inventory Cloud study notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --paper:#EEF1F4; --surface:#FFFFFF; --ink:#1C2B3A; --muted:#5B6B7B; --line:#C9D2DB;
+  --mark:#F2C230; --mark-soft:#FCF3D2; --ok:#2E7D5B; --ok-soft:#E3F2EA; --bad:#B3412E; --bad-soft:#F7E4E0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#141B23; --surface:#1C2530; --ink:#E4EAF0; --muted:#98A6B4; --line:#2E3B49;
+    --mark:#E8B923; --mark-soft:#3A3219; --ok:#5CC08F; --ok-soft:#1B3328; --bad:#E07A66; --bad-soft:#3A221D;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141B23; --surface:#1C2530; --ink:#E4EAF0; --muted:#98A6B4; --line:#2E3B49;
+  --mark:#E8B923; --mark-soft:#3A3219; --ok:#5CC08F; --ok-soft:#1B3328; --bad:#E07A66; --bad-soft:#3A221D;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--body)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--mark);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+nav{border-right:1px solid var(--line);padding:24px 18px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{font:700 26px/1 var(--display);letter-spacing:.01em;margin:0 0 4px}
+.brand-sub{color:var(--muted);font-size:14px;margin:0 0 24px}
+.domain{display:block;width:100%;text-align:left;background:none;border:0;border-left:4px solid transparent;
+  padding:8px 10px;margin:2px 0;border-radius:0 6px 6px 0;cursor:pointer;font-size:15px;line-height:1.35}
+.domain:hover{background:var(--surface)}
+.domain[aria-current="true"]{border-left-color:var(--mark);background:var(--surface);font-weight:700}
+.domain[disabled]{color:var(--muted);cursor:default;background:none}
+.domain small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.theme{margin-top:24px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:14px}
+
+main{padding:40px clamp(18px,5vw,64px) 80px;max-width:860px}
+h1{font:600 clamp(40px,6vw,60px)/1 var(--display);margin:0 0 12px;letter-spacing:-.005em}
+.lede{color:var(--muted);margin:0 0 20px;max-width:62ch}
+.topics{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 36px;padding:0;list-style:none}
+.topics li{font-size:14px;border:1px solid var(--line);border-radius:4px;padding:3px 9px;background:var(--surface)}
+h2{font:600 30px/1.1 var(--display);margin:44px 0 14px}
+h3{font-size:18px;margin:0 0 6px}
+
+details.sec{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin:0 0 12px}
+details.sec summary{cursor:pointer;padding:14px 18px;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:12px}
+details.sec summary::-webkit-details-marker{display:none}
+details.sec summary::after{content:"+";font:600 22px/1 var(--display);color:var(--muted)}
+details.sec[open] summary::after{content:"−"}
+.sec-body{padding:0 18px 16px}
+.sec-body ul{padding-left:20px;margin:6px 0}
+.sec-body li{margin:4px 0}
+.src{color:var(--muted);font-size:13px;margin-top:10px}
+.focus{border-left:6px solid var(--mark);background:var(--mark-soft);padding:10px 14px;margin:12px 0 4px;border-radius:0 6px 6px 0}
+.focus b{display:block;font-size:14px}
+.tbl{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:15px;min-width:420px;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{font-weight:700}
+
+.quiz-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.best{color:var(--muted);font-size:14px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;margin:0 0 14px}
+.q-n{font:600 15px/1 var(--display);color:var(--muted);margin-bottom:6px}
+.q p{margin:0 0 12px;font-weight:700}
+.opt{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);
+  border-radius:6px;padding:10px 12px;margin:6px 0;cursor:pointer}
+.opt:hover:not([disabled]){border-color:var(--ink)}
+.opt[disabled]{cursor:default}
+.opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.explain{margin-top:10px;font-size:15px}
+.explain strong{color:var(--ok)}
+.explain.no strong{color:var(--bad)}
+.score{position:sticky;bottom:12px;background:var(--ink);color:var(--paper);border-radius:8px;padding:12px 16px;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px}
+.score button{background:var(--mark);color:#1C2B3A;border:0;border-radius:6px;padding:6px 12px;font-weight:700;cursor:pointer}
+
+.menu-btn{display:none}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}
+  nav{position:fixed;inset:0 auto 0 0;width:84%;max-width:320px;background:var(--paper);z-index:10;
+      transform:translateX(-100%);transition:transform .2s;padding-top:calc(24px + env(safe-area-inset-top,0px))}
+  nav.open{transform:none;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
+  .menu-btn{display:inline-block;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;margin-bottom:20px;cursor:pointer}
+  main{padding-top:20px}
+}
+@media (prefers-reduced-motion:reduce){nav{transition:none}}
+
+.nav-practice{font-weight:700}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;margin:0 0 16px}
+.panel h3{margin-bottom:10px}
+.choice{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer}
+.choice:hover{background:var(--paper)}
+.choice input{accent-color:var(--ink);width:18px;height:18px}
+.choice span.c{margin-left:auto;color:var(--muted);font-size:14px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:8px 16px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.primary{background:var(--mark);color:#1C2B3A;border:0;border-radius:6px;padding:12px 22px;font-weight:700;cursor:pointer;font-size:17px}
+.secondary{background:none;border:1px solid var(--line);border-radius:6px;padding:11px 18px;cursor:pointer}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.run-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;color:var(--muted);font-size:15px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:24px}
+.bar i{display:block;height:100%;background:var(--mark);transition:width .2s}
+.tag{display:inline-block;font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 7px;margin-bottom:10px}
+.big{font:600 72px/1 var(--display);margin:6px 0}
+.miss{border-left:4px solid var(--bad);padding:6px 12px;margin:10px 0;background:var(--surface);border-radius:0 6px 6px 0;font-size:15px}
+.miss b{display:block}
+.note{color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+
+.dhead{font:600 17px/1.2 var(--display);color:var(--muted);margin:18px 0 4px 10px;letter-spacing:.01em}
+.dhead.off{opacity:.55}
+.domain .pct{float:right;font-size:12px;color:var(--muted);font-weight:400}
+select{font:inherit;color:inherit;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+.gap{border-left:6px solid var(--muted);background:var(--paper);padding:10px 14px;margin:12px 0;border-radius:0 6px 6px 0;font-size:15px}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <nav id="nav" aria-label="Study navigation">
+    <p class="brand">1Z0-1073-26</p>
+    <p class="brand-sub">Inventory Cloud 2026 Implementation Professional</p>
+    <button class="domain nav-practice" data-v="practice">Practice exam<small>Random questions from the library</small></button>
+    <div id="domains"></div>
+    <button class="theme" id="theme">Switch light / dark</button>
+  </nav>
+  <main id="main"></main>
+</div>
+<script>
+/* ---------- data registry (data files call MOD and QS) ---------- */
+const STUDY={domains:[
+  {id:"d1",title:"Enterprise structures"},
+  {id:"d2",title:"Inventory management"},
+  {id:"d3",title:"Inventory transactions"},
+  {id:"d4",title:"Executing transactions"},
+  {id:"d5",title:"Advanced transactions"},
+  {id:"d6",title:"Replenishment"},
+  {id:"d7",title:"Inventory counts"},
+  {id:"d8",title:"AI, mobile & Redwood"}
+],modules:[],bank:[]};
+function MOD(m){STUDY.modules.push(m)}
+/* questions: [question, [correct, wrong, wrong, ...], explanation]. Correct is always first; options are shuffled at runtime. */
+function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,i)=>STUDY.bank.push({id:mid+"-"+(i+1),m:mid,d:m.d,q:x[0],o:x[1],a:0,e:x[2]}))}
+</script>
+<script src="data/d1.js"></script>
+<script src="data/d2.js"></script>
+<script src="data/d3.js"></script>
+<script src="data/d4.js"></script>
+<script src="data/d5.js"></script>
+<script src="data/d6d7.js"></script>
+<script>
+/* ================= SHELL ================= */
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const $=s=>document.querySelector(s);
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const dom=id=>STUDY.domains.find(d=>d.id===id);
+const modOf=id=>STUDY.modules.find(m=>m.id===id);
+let view={v:"practice"}, setup={scope:"all",size:30,mod:""}, run=null;
+
+function missed(){return store.get("missed")||[]}
+function markResult(id,ok){let m=new Set(missed());ok?m.delete(id):m.add(id);store.set("missed",[...m])}
+function pool(scope){
+  if(scope==="all") return STUDY.bank;
+  if(scope==="missed"){const m=new Set(missed());return STUDY.bank.filter(q=>m.has(q.id))}
+  if(scope.startsWith("m:")) return STUDY.bank.filter(q=>q.m===scope.slice(2));
+  return STUDY.bank.filter(q=>q.d===scope);
+}
+function scopeLabel(s){return s==="all"?"Full exam":s==="missed"?"Questions I got wrong":s.startsWith("m:")?modOf(s.slice(2)).title:dom(s).title}
+
+function renderNav(){
+  const best=store.get("best")||{};
+  $("#domains").innerHTML=STUDY.domains.map(d=>{
+    const mods=STUDY.modules.filter(m=>m.d===d.id);
+    if(!mods.length) return `<p class="dhead off">${d.title}</p><button class="domain" disabled><small>Not added yet</small></button>`;
+    return `<p class="dhead">${d.title}</p>`+mods.map(m=>{const b=best["m:"+m.id];return `<button class="domain" data-m="${m.id}" aria-current="${view.v==="module"&&view.id===m.id}">${m.title}${b!=null?`<span class="pct">${b}%</span>`:""}</button>`}).join("");
+  }).join("");
+  document.querySelector(".nav-practice").setAttribute("aria-current",view.v!=="module");
+  document.querySelectorAll(".domain[data-m]").forEach(b=>b.onclick=()=>go({v:"module",id:b.dataset.m}));
+}
+function go(v){view=v;renderNav();({module:renderModule,practice:renderSetup,run:renderRun,result:renderResult})[v.v]();$("#nav").classList.remove("open");window.scrollTo(0,0)}
+const menuBtn=`<button class="menu-btn" onclick="document.getElementById('nav').classList.add('open')">Menu</button>`;
+
+function renderModule(){
+  const m=modOf(view.id), n=pool("m:"+m.id).length;
+  $("#main").innerHTML=`${menuBtn}
+    <h1>${m.title}</h1><p class="lede">${m.lede}</p>
+    <ul class="topics" aria-label="Exam topics covered">${m.topics.map(t=>`<li>${t}</li>`).join("")}</ul>
+    ${m.sections.map((s,i)=>`<details class="sec" ${i===0?"open":""}><summary>${s.t}</summary><div class="sec-body">${s.h}</div></details>`).join("")}
+    <div class="actions"><button class="primary" id="mq">Practise this topic (${Math.min(n,10)} of ${n} questions)</button></div>`;
+  $("#mq").onclick=()=>start("m:"+m.id,10);
+}
+
+function renderSetup(){
+  const opts=[["all",STUDY.bank.length],...STUDY.domains.map(d=>[d.id,pool(d.id).length]),["missed",missed().length]];
+  const best=store.get("best")||{};
+  if(!setup.mod) setup.mod=STUDY.modules[0].id;
+  $("#main").innerHTML=`${menuBtn}
+    <h1>Practice exam</h1>
+    <p class="lede">Questions are drawn at random from a library of ${STUDY.bank.length}. Every attempt gives you a new mix, and answer options are shuffled too.${best.all!=null?` Best full-exam score: ${best.all}%.`:""}</p>
+    <div class="panel"><h3>What to practise</h3>
+      ${opts.map(([id,c])=>`<label class="choice"><input type="radio" name="scope" value="${id}" ${setup.scope===id?"checked":""} ${c?"":"disabled"}>${scopeLabel(id)}<span class="c">${c?c+" in library":"none yet"}</span></label>`).join("")}
+      <label class="choice"><input type="radio" name="scope" value="mod" ${setup.scope==="mod"?"checked":""}>One module:
+        <select id="modsel">${STUDY.modules.map(m=>`<option value="${m.id}" ${setup.mod===m.id?"selected":""}>${m.title}</option>`).join("")}</select></label>
+    </div>
+    <div class="panel"><h3>Number of questions</h3>
+      <div class="seg">${[10,20,30,50].map(n=>`<button data-n="${n}" aria-pressed="${setup.size===n}">${n}</button>`).join("")}</div>
+      <p class="note" id="cap"></p>
+    </div>
+    <div class="actions"><button class="primary" id="go">Start</button></div>`;
+  const sc=()=>setup.scope==="mod"?"m:"+setup.mod:setup.scope;
+  const cap=()=>{const c=pool(sc()).length;$("#cap").textContent=c<setup.size?`Only ${c} available for this choice, so you'll get ${c}.`:""};
+  document.querySelectorAll("input[name=scope]").forEach(r=>r.onchange=()=>{setup.scope=r.value;cap()});
+  $("#modsel").onchange=e=>{setup.mod=e.target.value;setup.scope="mod";document.querySelector("input[value=mod]").checked=true;cap()};
+  document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{setup.size=+b.dataset.n;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));cap()});
+  $("#go").onclick=()=>start(sc(),setup.size);
+  cap();
+}
+
+function start(scope,size){
+  const qs=shuffle(pool(scope)).slice(0,size).map(q=>{const idx=shuffle(q.o.map((_,i)=>i));return {...q,o:idx.map(i=>q.o[i]),a:idx.indexOf(q.a)}});
+  if(!qs.length) return;
+  run={scope,size,qs,i:0,picked:[]};
+  go({v:"run"});
+}
+
+function renderRun(){
+  const q=run.qs[run.i], n=run.qs.length, p=run.picked[run.i], done=p!=null;
+  const correct=run.picked.filter((x,i)=>x===run.qs[i].a).length;
+  $("#main").innerHTML=`${menuBtn}
+    <div class="run-top"><span>${scopeLabel(run.scope)}, question ${run.i+1} of ${n}</span><span>${correct} correct</span></div>
+    <div class="bar"><i style="width:${(run.i+(done?1:0))/n*100}%"></i></div>
+    <div class="q">
+      <span class="tag">${modOf(q.m).title}</span>
+      <p>${q.q}</p>
+      ${q.o.map((o,j)=>`<button class="opt ${done&&j===q.a?"right":""} ${done&&j===p&&p!==q.a?"wrong":""}" data-j="${j}" ${done?"disabled":""}>${o}</button>`).join("")}
+      ${done?`<div class="explain ${p===q.a?"":"no"}"><strong>${p===q.a?"Correct.":"Not quite."}</strong> ${q.e}</div>`:""}
+    </div>
+    <div class="actions">
+      ${done?`<button class="primary" id="next">${run.i+1<n?"Next question":"See results"}</button>`:""}
+      <button class="secondary" id="quit">End and see results</button>
+    </div>`;
+  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const j=+b.dataset.j;run.picked[run.i]=j;markResult(q.id,j===q.a);renderRun();$("#next").focus()});
+  if(done) $("#next").onclick=()=>{if(run.i+1<n){run.i++;renderRun()}else go({v:"result"})};
+  $("#quit").onclick=()=>go({v:"result"});
+}
+
+function renderResult(){
+  const ans=run.qs.map((q,i)=>({q,p:run.picked[i]})).filter(x=>x.p!=null);
+  const ok=ans.filter(x=>x.p===x.q.a).length, pct=ans.length?Math.round(ok/ans.length*100):0;
+  if(ans.length===run.qs.length){const b=store.get("best")||{};if(b[run.scope]==null||pct>b[run.scope]){b[run.scope]=pct;store.set("best",b)}}
+  const byD={};ans.forEach(x=>{const d=byD[x.q.d]||(byD[x.q.d]={n:0,ok:0});d.n++;if(x.p===x.q.a)d.ok++});
+  const wrong=ans.filter(x=>x.p!==x.q.a);
+  $("#main").innerHTML=`${menuBtn}
+    <h1>Results</h1>
+    <div class="big">${pct}%</div>
+    <p class="lede">${ok} of ${ans.length} answered correctly${ans.length<run.qs.length?` (${run.qs.length-ans.length} not answered)`:""}.</p>
+    <div class="panel"><h3>By domain</h3><div class="tbl"><table>
+      <tr><th>Domain</th><th>Score</th></tr>
+      ${Object.entries(byD).map(([d,v])=>`<tr><td>${dom(d).title}</td><td>${v.ok}/${v.n}</td></tr>`).join("")}
+    </table></div></div>
+    ${wrong.length?`<h2>Review what you missed</h2>${wrong.map(x=>`<div class="miss"><b>${x.q.q}</b>Correct answer: ${x.q.o[x.q.a]}. ${x.q.e}</div>`).join("")}`:""}
+    <div class="actions">
+      <button class="primary" id="again">New random set</button>
+      <button class="secondary" id="back">Change practice options</button>
+    </div>`;
+  $("#again").onclick=()=>start(run.scope,run.size);
+  $("#back").onclick=()=>go({v:"practice"});
+}
+
+document.querySelector(".nav-practice").onclick=()=>go({v:"practice"});
+const t=store.get("theme");if(t)document.documentElement.dataset.theme=t;
+$("#theme").onclick=()=>{const d=document.documentElement.dataset.theme?document.documentElement.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;const n=d?"light":"dark";document.documentElement.dataset.theme=n;store.set("theme",n)};
+go(view);
+</script>
+</body>
+</html>
