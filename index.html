@@ -144,6 +144,14 @@ dl.kt{margin:0}dl.kt dt{font-weight:700;margin-top:10px}dl.kt dd{margin:2px 0 0}
 .lab>b::before{content:"";display:inline-block;width:10px;height:10px;background:var(--mark);margin-right:8px;vertical-align:1px}
 .lab ul,.lab ol{padding-left:20px;margin:4px 0}.lab p{margin:6px 0}
 .lab>small{display:block;color:var(--muted);font-size:12px;margin-top:6px}
+.eyebrow{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px}
+details.xsec{margin:6px 0}details.xsec>summary{cursor:pointer;list-style:none;font:600 17px/1.25 var(--display);padding:8px 10px;border-radius:6px}
+details.xsec>summary::-webkit-details-marker{display:none}details.xsec>summary::before{content:"+";display:inline-block;width:16px;color:var(--muted)}
+details.xsec[open]>summary::before{content:"−"}details.xsec>summary:hover{background:var(--surface)}
+details.xsec .dhead{font-size:13px;text-transform:uppercase;letter-spacing:.06em;margin:10px 0 2px 26px}
+details.xsec .domain{padding-left:26px;font-size:14px}
+.link{display:block;background:none;border:0;padding:6px 0;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit;text-align:left}
+.tsum{display:grid;gap:6px;margin:6px 0 18px}.tsum button{text-align:left}
 </style>
 </head>
 <body>
@@ -172,6 +180,7 @@ const STUDY={domains:[
   {id:"d8",title:"AI, mobile & Redwood"}
 ],modules:[],bank:[]};
 function MOD(m){STUDY.modules.push(m)}
+function EXAMDEF(ex,qt,qd){STUDY.exam=ex.map((s,si)=>({i:si,title:s[0],groups:s[1].map(g=>({title:g[0],topics:g[1].map(t=>({id:t[0],title:t[1],refs:t[2]||[],rel:t[3]||[],note:t[4]||"",s:si,g:g[0]}))}))}));STUDY.topics=STUDY.exam.flatMap(s=>s.groups.flatMap(g=>g.topics));STUDY.qt=qt;STUDY.qd=qd}
 function GLOSS(list){STUDY.gloss=list.map(x=>({t:x[0],d:x[1],a:x[2]||[]})).sort((a,b)=>a.t.localeCompare(b.t))}
 /* questions: [question, [correct, wrong, wrong, ...], explanation]. Correct is always first; options are shuffled at runtime. */
 function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,i)=>STUDY.bank.push({id:mid+"-"+(i+1),m:mid,d:m.d,q:x[0],o:x[1],a:0,e:x[2]}))}
@@ -184,8 +193,12 @@ function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,
 <script src="data/d5.js"></script>
 <script src="data/d6d7.js"></script>
 <script src="data/d8.js"></script>
+<script src="data/exam.js"></script>
 <script>
 /* ================= SHELL ================= */
+const topOf=id=>STUDY.topics.find(t=>t.id===id);
+STUDY.bank.forEach(q=>{q.t=STUDY.qt[q.id]||STUDY.qd[q.m];q.s=topOf(q.t).s});
+const shortG=g=>/^Explain/.test(g)?"Explain":/^Configure/.test(g)?"Configure":/^Execute/.test(g)?"Execute":g;
 
 
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
@@ -193,29 +206,28 @@ const $=s=>document.querySelector(s);
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const dom=id=>STUDY.domains.find(d=>d.id===id);
 const modOf=id=>STUDY.modules.find(m=>m.id===id);
-let view={v:"practice"}, setup={scope:"all",size:30,mod:""}, run=null;
+let view={v:"practice"}, setup={scope:"all",size:30,topic:""}, run=null;
 
 function missed(){return store.get("missed")||[]}
 function markResult(id,ok){let m=new Set(missed());ok?m.delete(id):m.add(id);store.set("missed",[...m])}
 function pool(scope){
   if(scope==="all") return STUDY.bank;
   if(scope==="missed"){const m=new Set(missed());return STUDY.bank.filter(q=>m.has(q.id))}
-  if(scope.startsWith("m:")) return STUDY.bank.filter(q=>q.m===scope.slice(2));
-  return STUDY.bank.filter(q=>q.d===scope);
+  if(scope.startsWith("t:")) return STUDY.bank.filter(q=>q.t===scope.slice(2));
+  if(scope.startsWith("s:")) return STUDY.bank.filter(q=>q.s===+scope.slice(2));
+  return [];
 }
-function scopeLabel(s){return s==="all"?"Full exam":s==="missed"?"Questions I got wrong":s.startsWith("m:")?modOf(s.slice(2)).title:dom(s).title}
+function scopeLabel(s){return s==="all"?"Full exam":s==="missed"?"Questions I got wrong":s.startsWith("t:")?topOf(s.slice(2)).title:STUDY.exam[+s.slice(2)].title}
 
 function renderNav(){
-  const best=store.get("best")||{};
-  $("#domains").innerHTML=STUDY.domains.map(d=>{
-    const mods=STUDY.modules.filter(m=>m.d===d.id);
-    if(!mods.length) return `<p class="dhead off">${d.title}</p><button class="domain" disabled><small>Not added yet</small></button>`;
-    return `<p class="dhead">${d.title}</p>`+mods.map(m=>{const b=best["m:"+m.id];return `<button class="domain" data-m="${m.id}" aria-current="${view.v==="module"&&view.id===m.id}">${m.title}${b!=null?`<span class="pct">${b}%</span>`:""}</button>`}).join("");
-  }).join("");
+  const best=store.get("best")||{}, cur=view.v==="topic"?topOf(view.id):null;
+  $("#domains").innerHTML=STUDY.exam.map(x=>`<details class="xsec" ${cur&&cur.s===x.i?"open":""}><summary>${x.title}</summary>`+
+    x.groups.map(g=>(g.title?`<p class="dhead">${shortG(g.title)}</p>`:"")+g.topics.map(t=>{const b=best["t:"+t.id];
+      return `<button class="domain" data-t="${t.id}" aria-current="${!!(cur&&cur.id===t.id)}">${t.title}${b!=null?`<span class="pct">${b}%</span>`:""}</button>`}).join("")).join("")+`</details>`).join("");
   document.querySelector(".nav-practice").setAttribute("aria-current",view.v==="practice"||view.v==="run"||view.v==="result");document.querySelector(".nav-gloss").setAttribute("aria-current",view.v==="glossary");
-  document.querySelectorAll(".domain[data-m]").forEach(b=>b.onclick=()=>go({v:"module",id:b.dataset.m}));
+  document.querySelectorAll(".domain[data-t]").forEach(b=>b.onclick=()=>go({v:"topic",id:b.dataset.t}));
 }
-function go(v){view=v;renderNav();({module:renderModule,practice:renderSetup,run:renderRun,result:renderResult,glossary:renderGlossary})[v.v]();$("#tip").hidden=true;$("#nav").classList.remove("open");window.scrollTo(0,0)}
+function go(v){view=v;renderNav();({topic:renderTopic,practice:renderSetup,run:renderRun,result:renderResult,glossary:renderGlossary})[v.v]();$("#tip").hidden=true;$("#nav").classList.remove("open");window.scrollTo(0,0)}
 /*MB*/const menuBtn=`<button class="menu-btn" onclick="document.getElementById('nav').classList.add('open')">Menu</button>`;
 
 /* ---------- glossary highlighting ---------- */
@@ -250,40 +262,44 @@ function renderGlossary(){
   $("#gq").oninput=e=>draw(e.target.value); draw("");
 }
 
-function renderModule(){
-  const m=modOf(view.id), n=pool("m:"+m.id).length;
+function renderTopic(){
+  const t=topOf(view.id), x=STUDY.exam[t.s], n=pool("t:"+t.id).length;
+  const secs=t.refs.map(r=>{const [m,i]=r.split(":");return modOf(m).sections[+i]});
   $("#main").innerHTML=`${menuBtn}
-    <h1>${m.title}</h1><p class="lede">${m.lede}</p>
-    <ul class="topics" aria-label="Exam topics covered">${m.topics.map(t=>`<li>${t}</li>`).join("")}</ul>
-    ${m.sections.map((s,i)=>`<details class="sec" ${i===0?"open":""}><summary>${s.t}</summary><div class="sec-body">${s.h}</div></details>`).join("")}
-    <div class="actions"><button class="primary" id="mq">Practise this topic (${Math.min(n,10)} of ${n} questions)</button></div>`;
+    <p class="eyebrow">${x.title}</p><h1>${t.title}</h1>
+    ${t.g?`<p class="lede">${t.g}</p>`:""}
+    ${t.note?`<div class="gap">${t.note}</div>`:""}
+    ${secs.map((s,i)=>`<details class="sec" ${i===0?"open":""}><summary>${s.t}</summary><div class="sec-body">${s.h}</div></details>`).join("")}
+    ${t.rel.length?`<div class="panel"><h3>Related topics</h3>${t.rel.map(r=>`<button class="link" data-t="${r}">${topOf(r).title}</button>`).join("")}</div>`:""}
+    <div class="actions">${n?`<button class="primary" id="mq">Practise this topic (${Math.min(n,10)} of ${n} questions)</button>`:`<p class="note">No quiz questions for this topic yet.</p>`}</div>`;
   const found=new Set(); annotate($("#main"),found);
-  if(found.size){const kt=[...found].map(i=>STUDY.gloss[i]).sort((x,y)=>x.t.localeCompare(y.t));
-    $("#main .actions").insertAdjacentHTML("beforebegin",`<details class="sec"><summary>Key terms in this module (${kt.length})</summary><div class="sec-body"><dl class="kt">${kt.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl></div></details>`)}
-  $("#mq").onclick=()=>start("m:"+m.id,10);
+  if(found.size){const kt=[...found].map(i=>STUDY.gloss[i]).sort((a,b)=>a.t.localeCompare(b.t));
+    $("#main .actions").insertAdjacentHTML("beforebegin",`<details class="sec"><summary>Key terms in this topic (${kt.length})</summary><div class="sec-body"><dl class="kt">${kt.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl></div></details>`)}
+  document.querySelectorAll("#main .link[data-t]").forEach(b=>b.onclick=()=>go({v:"topic",id:b.dataset.t}));
+  if(n) $("#mq").onclick=()=>start("t:"+t.id,10);
 }
 
 function renderSetup(){
-  const opts=[["all",STUDY.bank.length],...STUDY.domains.map(d=>[d.id,pool(d.id).length]),["missed",missed().length]];
+  const opts=[["all",STUDY.bank.length],...STUDY.exam.map(x=>["s:"+x.i,pool("s:"+x.i).length]),["missed",missed().length]];
   const best=store.get("best")||{};
-  if(!setup.mod) setup.mod=STUDY.modules[0].id;
+  if(!setup.topic) setup.topic=STUDY.topics[0].id;
   $("#main").innerHTML=`${menuBtn}
     <h1>Practice exam</h1>
     <p class="lede">Questions are drawn at random from a library of ${STUDY.bank.length}. Every attempt gives you a new mix, and answer options are shuffled too.${best.all!=null?` Best full-exam score: ${best.all}%.`:""}</p>
     <div class="panel"><h3>What to practise</h3>
       ${opts.map(([id,c])=>`<label class="choice"><input type="radio" name="scope" value="${id}" ${setup.scope===id?"checked":""} ${c?"":"disabled"}>${scopeLabel(id)}<span class="c">${c?c+" in library":"none yet"}</span></label>`).join("")}
-      <label class="choice"><input type="radio" name="scope" value="mod" ${setup.scope==="mod"?"checked":""}>One module:
-        <select id="modsel">${STUDY.modules.map(m=>`<option value="${m.id}" ${setup.mod===m.id?"selected":""}>${m.title}</option>`).join("")}</select></label>
+      <label class="choice"><input type="radio" name="scope" value="topic" ${setup.scope==="topic"?"checked":""}>One exam topic:
+        <select id="modsel" style="max-width:100%">${STUDY.exam.map(x=>`<optgroup label="${x.title}">${x.groups.flatMap(g=>g.topics).map(t=>{const c=pool("t:"+t.id).length;return `<option value="${t.id}" ${setup.topic===t.id?"selected":""} ${c?"":"disabled"}>${t.title} (${c})</option>`}).join("")}</optgroup>`).join("")}</select></label>
     </div>
     <div class="panel"><h3>Number of questions</h3>
       <div class="seg">${[10,20,30,50].map(n=>`<button data-n="${n}" aria-pressed="${setup.size===n}">${n}</button>`).join("")}</div>
       <p class="note" id="cap"></p>
     </div>
     <div class="actions"><button class="primary" id="go">Start</button></div>`;
-  const sc=()=>setup.scope==="mod"?"m:"+setup.mod:setup.scope;
+  const sc=()=>setup.scope==="topic"?"t:"+setup.topic:setup.scope;
   const cap=()=>{const c=pool(sc()).length;$("#cap").textContent=c<setup.size?`Only ${c} available for this choice, so you'll get ${c}.`:""};
   document.querySelectorAll("input[name=scope]").forEach(r=>r.onchange=()=>{setup.scope=r.value;cap()});
-  $("#modsel").onchange=e=>{setup.mod=e.target.value;setup.scope="mod";document.querySelector("input[value=mod]").checked=true;cap()};
+  $("#modsel").onchange=e=>{setup.topic=e.target.value;setup.scope="topic";document.querySelector("input[value=topic]").checked=true;cap()};
   document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{setup.size=+b.dataset.n;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));cap()});
   $("#go").onclick=()=>start(sc(),setup.size);
   cap();
@@ -303,7 +319,7 @@ function renderRun(){
     <div class="run-top"><span>${scopeLabel(run.scope)}, question ${run.i+1} of ${n}</span><span>${correct} correct</span></div>
     <div class="bar"><i style="width:${(run.i+(done?1:0))/n*100}%"></i></div>
     <div class="q">
-      <span class="tag">${modOf(q.m).title}</span>
+      <span class="tag">${topOf(q.t).title}</span>
       <p>${q.q}</p>
       ${q.o.map((o,j)=>`<button class="opt ${done&&j===q.a?"right":""} ${done&&j===p&&p!==q.a?"wrong":""}" data-j="${j}" ${done?"disabled":""}>${o}</button>`).join("")}
       ${done?`<div class="explain ${p===q.a?"":"no"}"><strong>${p===q.a?"Correct.":"Not quite."}</strong> ${q.e}</div>`:""}
@@ -321,15 +337,15 @@ function renderResult(){
   const ans=run.qs.map((q,i)=>({q,p:run.picked[i]})).filter(x=>x.p!=null);
   const ok=ans.filter(x=>x.p===x.q.a).length, pct=ans.length?Math.round(ok/ans.length*100):0;
   if(ans.length===run.qs.length){const b=store.get("best")||{};if(b[run.scope]==null||pct>b[run.scope]){b[run.scope]=pct;store.set("best",b)}}
-  const byD={};ans.forEach(x=>{const d=byD[x.q.d]||(byD[x.q.d]={n:0,ok:0});d.n++;if(x.p===x.q.a)d.ok++});
+  const byD={};ans.forEach(x=>{const d=byD[x.q.s]||(byD[x.q.s]={n:0,ok:0});d.n++;if(x.p===x.q.a)d.ok++});
   const wrong=ans.filter(x=>x.p!==x.q.a);
   $("#main").innerHTML=`${menuBtn}
     <h1>Results</h1>
     <div class="big">${pct}%</div>
     <p class="lede">${ok} of ${ans.length} answered correctly${ans.length<run.qs.length?` (${run.qs.length-ans.length} not answered)`:""}.</p>
-    <div class="panel"><h3>By domain</h3><div class="tbl"><table>
-      <tr><th>Domain</th><th>Score</th></tr>
-      ${Object.entries(byD).map(([d,v])=>`<tr><td>${dom(d).title}</td><td>${v.ok}/${v.n}</td></tr>`).join("")}
+    <div class="panel"><h3>By exam section</h3><div class="tbl"><table>
+      <tr><th>Exam section</th><th>Score</th></tr>
+      ${Object.entries(byD).map(([d,v])=>`<tr><td>${STUDY.exam[d].title}</td><td>${v.ok}/${v.n}</td></tr>`).join("")}
     </table></div></div>
     ${wrong.length?`<h2>Review what you missed</h2>${wrong.map(x=>`<div class="miss"><b>${x.q.q}</b>Correct answer: ${x.q.o[x.q.a]}. ${x.q.e}</div>`).join("")}`:""}
     <div class="actions">
