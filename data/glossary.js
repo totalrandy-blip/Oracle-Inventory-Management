@@ -1,6 +1,5 @@
 /* Glossary: [term, definition, optional aliases]. Terms are highlighted automatically in module text. */
 GLOSS([
-/* Enterprise structure & setup */
 ["Legal entity","A registered company that can own assets, sign contracts and be taxed. It owns one primary ledger and one or more business units."],
 ["Business unit","A unit of the enterprise that performs business functions such as selling or buying. A profit-centre BU reports its own profit and loss.",["BU","profit-centre business unit","profit centre business unit"]],
 ["Shared service BU","A business unit that provides a service, such as purchasing or payables, on behalf of several other BUs or legal entities."],
@@ -25,7 +24,6 @@ GLOSS([
 ["Code level","The release and patch level of an Oracle Cloud environment. Setup data can only be migrated between environments on the same code level."],
 ["Gold copy","An environment kept as the single source of truth for setup data, from which Test and Production are configured."],
 ["P2T","Production-to-test: copying the production environment over a test environment to refresh it."],
-/* Storage & UOM */
 ["Subinventory","A physical or logical area of stock inside an inventory organisation, such as raw materials or defective. Every transaction needs one."],
 ["Locator","An optional, more precise storage location inside a subinventory, such as aisle-row-bin."],
 ["Locator control","The rule deciding whether locators are used: None, Predefined (must exist beforehand), Dynamic entry (created during a transaction) or Item level."],
@@ -47,7 +45,6 @@ GLOSS([
 ["PAR level","The optimal quantity of an item to keep at a PAR location. Replenishment brings stock back up to this level."],
 ["PAR max","The maximum quantity allowed at a PAR location for an item."],
 ["Two-bin","A count method with two containers: when the first bin is empty, it triggers replenishment while the second bin is used."],
-/* Items */
 ["Item class","A classification that decides which attributes, templates and lifecycle phases an item can have. The Root Item Class is seeded."],
 ["Lifecycle phase","The stage an item is in, such as Design, Prototype, Production or Obsolete. It controls what you can do with the item."],
 ["Item template","A predefined set of attribute values applied when creating items. When several are applied, the last one wins."],
@@ -60,11 +57,9 @@ GLOSS([
 ["Common structure","A structure that points to another item's structure instead of copying it, so changes flow through automatically."],
 ["Work definition","The manufacturing recipe for an item: operations, resources and components, used by manufacturing, costing and planning."],
 ["Effectivity","When a structure component applies: from a date, a serial number or a unit/lot number."],
-/* Schedules */
 ["Shift","A block of working or non-working time in a schedule."],
 ["Workday pattern","A sequence of shifts over a number of days that repeats, e.g. five working days and two days off."],
 ["Schedule exception","A deviation from the normal pattern, such as a public holiday, that applies to every object using the schedule."],
-/* Costing */
 ["Receipt accounting","The Oracle module that accrues and accounts for received goods and services before the supplier invoice arrives."],
 ["Accrue at receipt","A PO schedule setting that records the liability when goods are received rather than when the invoice arrives. Mandatory for inventory items."],
 ["Accrual","A liability recorded for goods or services received but not yet invoiced."],
@@ -82,7 +77,6 @@ GLOSS([
 ["Intercompany","Trade between two legal entities of the same group, which requires invoices and separate accounting in each."],
 ["Cost scenario","A working set of cost estimates, rates and overheads used to calculate and publish standard costs."],
 ["Cost rollup","Calculating an assembly's cost by adding up the costs of its components and resources."],
-/* Transactions & status */
 ["Transaction type","The combination of a transaction source and a transaction action, e.g. PO receipt = Purchase order + Receipt into stores."],
 ["Transaction source","The document or entity a transaction is charged to, such as a purchase order, sales order or account alias. You can add your own."],
 ["Transaction action","The system-defined kind of movement, such as Issue from stores or Subinventory transfer. You can't add actions."],
@@ -94,7 +88,6 @@ GLOSS([
 ["Available to promise","Quantity that can be promised to new demand after existing commitments.",["ATP"]],
 ["E-signature","An electronic approval, with user name and password, required before (inline) or after (deferred) a transaction is committed."],
 ["E-record","A secure electronic record of a transaction kept for regulatory audit, e.g. FDA."],
-/* Availability */
 ["On-hand","Stock physically in storage in a subinventory or locator.",["on hand"]],
 ["Available to transact","Quantity that can be moved or issued now: on-hand minus reservations and pending transactions."],
 ["Available to reserve","Quantity that can still be reserved to new demand."],
@@ -105,7 +98,6 @@ GLOSS([
 ["Pending transaction","A transaction entered but not yet processed; it reduces availability until processed."],
 ["Supply document","A document that brings stock in: PO, requisition, transfer order, work order or on-hand."],
 ["Demand document","A document that needs stock: sales order, transfer order, movement request and similar."],
-/* Lot & serial */
 ["Lot","A quantity of an item produced or received together with the same specifications and cost, tracked under one lot number."],
 ["Parent lot","A lot that is split into child lots, e.g. one production batch split into different packaging forms.",["child lot"]],
 ["Lot grade","A quality rating of a lot, such as A or B, used as information for picking and costing."],
@@ -114,7 +106,6 @@ GLOSS([
 ["Serial number","A unique number identifying one individual unit of an item."],
 ["Genealogy","The traceability of lots and serials backward to components and suppliers, and forward to assemblies and customers."],
 ["Serial uniqueness","How widely a serial number must be unique: within an item, within an org, or across all orgs."],
-/* Picking & receiving */
 ["Picking rule","A rule that decides which lots, revisions, subinventories and locators to pick from, and in what order."],
 ["Pick release","Selecting demand lines to pick, allocating stock and creating pick slips."],
 ["Pick confirm","Confirming that picked stock has been moved, typically to a staging subinventory."],
@@ -135,7 +126,6 @@ GLOSS([
 ["Receipt close point","When a PO schedule is closed for receiving: at Received, Accepted or Delivered."],
 ["Return material authorisation","A customer return authorised in Order Management and received in the warehouse.",["RMA"]],
 ["Receipt traveler","A printed document that follows received goods to their put-away location."],
-/* Transfers */
 ["Subinventory transfer","Moving stock between subinventories or locators in the same org, with no pick or receipt steps."],
 ["Movement request","An internal request to move or issue stock within an org, with picking but no receiving. Types: requisition, replenishment and pick wave.",["MR"]],
 ["Interorganization transfer","Moving stock from one inventory org to another, either directly or via in-transit.",["interorg transfer","interorganization"]],
@@ -145,7 +135,6 @@ GLOSS([
 ["Internal material transfer","Any movement of goods between internal locations, executed through a transfer order.",["IMT"]],
 ["Interorganization parameters","Settings for each pair of orgs: transfer type, receipt routing, whether a TO is required, and distance."],
 ["Transit time","The number of days goods take between two locations with a given shipping method."],
-/* Advanced */
 ["Supply Chain Orchestration","The Oracle module that turns supply requests into POs, work orders, transfer orders or reservations and keeps them in line with demand.",["SCO"]],
 ["Supply request","A request from another application (planning, OM, min-max) asking SCO to create supply."],
 ["Supply order","SCO's record of a supply request, with lines and tracking lines for each supply document."],
@@ -178,7 +167,6 @@ GLOSS([
 ["Service item","In contract manufacturing, the Buy item on the PO that represents the manufacturer's work."],
 ["Count point operation","A manufacturing operation where progress is reported; later operations can be completed automatically.",["count-point operation"]],
 ["Operation pull","A supply type where components are issued automatically when the operation is completed.",["operation-pull"]],
-/* Replenishment */
 ["Min-max planning","A simple replenishment method: when available stock falls below the minimum, order enough to bring it up to the maximum."],
 ["Minimum quantity","The stock level that triggers a reorder in min-max planning.",["min quantity"]],
 ["Maximum quantity","The level min-max orders up to.",["max quantity"]],
@@ -192,7 +180,6 @@ GLOSS([
 ["Source type","Where min-max replenishment comes from: Organization (transfer order), Subinventory (movement request) or Supplier (requisition)."],
 ["Economic order quantity","The order size that minimises the total of ordering and holding costs.",["EOQ"]],
 ["Restock","A min-max report parameter; when Yes, the report creates the replenishment documents, not just a report."],
-/* Counts */
 ["ABC analysis","Ranking items by value so the most valuable (A) items get the most attention, such as more frequent counts.",["ABC"]],
 ["Classification set","The set of items valued and ranked in an ABC analysis."],
 ["ABC assignment group","Splits a ranked classification set into classes such as A, B and C."],
@@ -204,5 +191,15 @@ GLOSS([
 ["Snapshot","The frozen system quantities taken at the start of a physical inventory, used to compare against the counts."],
 ["Physical inventory tag","A ticket for one item in one location that the counter fills in.",["tag"]],
 ["Dynamic tag","A tag created during counting for stock found that had no pre-printed tag."],
-["Void tag","A tag cancelled because it wasn't used. Void tags don't cause adjustments."]
+["Void tag","A tag cancelled because it wasn't used. Void tags don't cause adjustments."],
+["Redwood","Oracle's current user experience for Fusion applications: responsive pages that replace classic pages, usually switched on per page with a profile option.",["Redwood page","Redwood pages"]],
+["Profile option","A setting that controls application behaviour at site, product or user level. Redwood pages are usually enabled with a site-level profile option ending in _REDWOOD_ENABLED.",["profile options"]],
+["Visual Builder Studio","The tool for extending Redwood pages: page properties, hiding buttons, adding fields. Opened from Settings and Actions → Edit Page in Visual Builder Studio.",["VBS"]],
+["Guided journey","In-page guidance (tasks, checklists, help) added to a Redwood page. Also the way an AI agent is placed on a page, as an Agent task of type Workflow Agent.",["guided journeys"]],
+["AI Agent Studio","Where Fusion AI agents are built, copied from Oracle templates, published and managed. Navigator → Tools → AI Agent Studio."],
+["Agent team","A published AI agent: a supervisor agent that routes questions to worker agents, which use tools such as REST business objects or documents.",["agent teams"]],
+["Permission group","A Security Console setting on a configured job role that must be enabled before users with the runtime duty can use AI agents.",["permission groups"]],
+["Business rule","A Redwood feature to default field values or make fields hidden, read-only or required without code.",["business rules"]],
+["User-defined demand","A demand document you create yourself to reserve stock when no sales, work or transfer order exists."],
+["Processing constraint","An Order Management rule that blocks certain changes, e.g. DOO_DS_FULFILLMENT_LINE_UPDATE blocks late drop ship changes.",["processing constraints"]]
 ]);
