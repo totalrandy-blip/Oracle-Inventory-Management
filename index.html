@@ -139,6 +139,11 @@ dfn.term:hover,dfn.term:focus{background:var(--mark-soft);outline:none}
 .search{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);margin-bottom:16px}
 dl.kt{margin:0}dl.kt dt{font-weight:700;margin-top:10px}dl.kt dd{margin:2px 0 0}
 
+.lab{border:1px dashed var(--muted);background:var(--paper);border-radius:6px;padding:10px 14px 8px;margin:14px 0 4px;font-size:15px}
+.lab>b{display:block;font:600 17px/1.2 var(--display);letter-spacing:.02em;text-transform:uppercase;margin-bottom:4px}
+.lab>b::before{content:"";display:inline-block;width:10px;height:10px;background:var(--mark);margin-right:8px;vertical-align:1px}
+.lab ul,.lab ol{padding-left:20px;margin:4px 0}.lab p{margin:6px 0}
+.lab>small{display:block;color:var(--muted);font-size:12px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -178,6 +183,7 @@ function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,
 <script src="data/d4.js"></script>
 <script src="data/d5.js"></script>
 <script src="data/d6d7.js"></script>
+<script src="data/d8.js"></script>
 <script>
 /* ================= SHELL ================= */
 
