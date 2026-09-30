@@ -152,6 +152,14 @@ details.xsec .dhead{font-size:13px;text-transform:uppercase;letter-spacing:.06em
 details.xsec .domain{padding-left:26px;font-size:14px}
 .link{display:block;background:none;border:0;padding:6px 0;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit;text-align:left}
 .tsum{display:grid;gap:6px;margin:6px 0 18px}.tsum button{text-align:left}
+
+.opt.pick{border-color:var(--ink);background:var(--mark-soft)}
+.opt.missed{border-style:dashed;border-color:var(--ok)}
+.opt .box{display:inline-block;width:18px;height:18px;border:2px solid var(--muted);border-radius:4px;margin-right:10px;vertical-align:-3px}
+.opt.pick .box{background:var(--ink);border-color:var(--ink)}
+.opt.radio .box{border-radius:50%}
+.choose{display:inline-block;font:600 15px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;background:var(--ink);color:var(--paper);border-radius:4px;padding:5px 9px;margin:0 0 10px}
+.srcnote{color:var(--muted);font-size:13px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -160,6 +168,7 @@ details.xsec .domain{padding-left:26px;font-size:14px}
     <p class="brand">1Z0-1073-26</p>
     <p class="brand-sub">Inventory Cloud 2026 Implementation Professional</p>
     <button class="domain nav-practice" data-v="practice">Practice exam<small>Random questions from the library</small></button>
+    <button class="domain nav-gen" data-v="gen">Guide question generator<small>New questions from the Oracle guides</small></button>
     <button class="domain nav-gloss" data-v="glossary">Glossary<small>All terms explained</small></button>
     <div id="domains"></div>
     <button class="theme" id="theme">Switch light / dark</button>
@@ -181,6 +190,7 @@ const STUDY={domains:[
 ],modules:[],bank:[]};
 function MOD(m){STUDY.modules.push(m)}
 function EXAMDEF(ex,qt,qd){STUDY.exam=ex.map((s,si)=>({i:si,title:s[0],groups:s[1].map(g=>({title:g[0],topics:g[1].map(t=>({id:t[0],title:t[1],refs:t[2]||[],rel:t[3]||[],note:t[4]||"",s:si,g:g[0]}))}))}));STUDY.topics=STUDY.exam.flatMap(s=>s.groups.flatMap(g=>g.topics));STUDY.qt=qt;STUDY.qd=qd}
+function GEN(src,list){(STUDY.gen=STUDY.gen||[]);list.forEach(x=>STUDY.gen.push({...x,src,id:"g"+STUDY.gen.length}))}
 function GLOSS(list){STUDY.gloss=list.map(x=>({t:x[0],d:x[1],a:x[2]||[]})).sort((a,b)=>a.t.localeCompare(b.t))}
 /* questions: [question, [correct, wrong, wrong, ...], explanation]. Correct is always first; options are shuffled at runtime. */
 function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,i)=>STUDY.bank.push({id:mid+"-"+(i+1),m:mid,d:m.d,q:x[0],o:x[1],a:0,e:x[2]}))}
@@ -194,6 +204,7 @@ function QS(mid,list){const m=STUDY.modules.find(x=>x.id===mid);list.forEach((x,
 <script src="data/d6d7.js"></script>
 <script src="data/d8.js"></script>
 <script src="data/exam.js"></script>
+<script src="data/docgen.js"></script>
 <script>
 /* ================= SHELL ================= */
 const topOf=id=>STUDY.topics.find(t=>t.id===id);
@@ -224,10 +235,10 @@ function renderNav(){
   $("#domains").innerHTML=STUDY.exam.map(x=>`<details class="xsec" ${cur&&cur.s===x.i?"open":""}><summary>${x.title}</summary>`+
     x.groups.map(g=>(g.title?`<p class="dhead">${shortG(g.title)}</p>`:"")+g.topics.map(t=>{const b=best["t:"+t.id];
       return `<button class="domain" data-t="${t.id}" aria-current="${!!(cur&&cur.id===t.id)}">${t.title}${b!=null?`<span class="pct">${b}%</span>`:""}</button>`}).join("")).join("")+`</details>`).join("");
-  document.querySelector(".nav-practice").setAttribute("aria-current",view.v==="practice"||view.v==="run"||view.v==="result");document.querySelector(".nav-gloss").setAttribute("aria-current",view.v==="glossary");
+  document.querySelector(".nav-practice").setAttribute("aria-current",view.v==="practice"||view.v==="run"||view.v==="result");document.querySelector(".nav-gloss").setAttribute("aria-current",view.v==="glossary");const ng=document.querySelector(".nav-gen");if(ng)ng.setAttribute("aria-current",/^gen/.test(view.v));
   document.querySelectorAll(".domain[data-t]").forEach(b=>b.onclick=()=>go({v:"topic",id:b.dataset.t}));
 }
-function go(v){view=v;renderNav();({topic:renderTopic,practice:renderSetup,run:renderRun,result:renderResult,glossary:renderGlossary})[v.v]();$("#tip").hidden=true;$("#nav").classList.remove("open");window.scrollTo(0,0)}
+function go(v){view=v;renderNav();({topic:renderTopic,practice:renderSetup,run:renderRun,result:renderResult,glossary:renderGlossary,gen:renderGenSetup,genrun:renderGenRun,genresult:renderGenResult})[v.v]();$("#tip").hidden=true;$("#nav").classList.remove("open");window.scrollTo(0,0)}
 /*MB*/const menuBtn=`<button class="menu-btn" onclick="document.getElementById('nav').classList.add('open')">Menu</button>`;
 
 /* ---------- glossary highlighting ---------- */
@@ -277,6 +288,8 @@ function renderTopic(){
     $("#main .actions").insertAdjacentHTML("beforebegin",`<details class="sec"><summary>Key terms in this topic (${kt.length})</summary><div class="sec-body"><dl class="kt">${kt.map(g=>`<dt>${g.t}</dt><dd>${g.d}</dd>`).join("")}</dl></div></details>`)}
   document.querySelectorAll("#main .link[data-t]").forEach(b=>b.onclick=()=>go({v:"topic",id:b.dataset.t}));
   if(n) $("#mq").onclick=()=>start("t:"+t.id,10);
+  const gn=(STUDY.gen||[]).filter(c=>c.t===t.id).length;
+  if(gn){$("#main .actions").insertAdjacentHTML("beforeend",`<button class="secondary" id="gq">Generate guide questions (${gn} fact sets)</button>`);$("#gq").onclick=()=>gstart("t:"+t.id,10,"both")}
 }
 
 function renderSetup(){
@@ -356,6 +369,108 @@ function renderResult(){
   $("#back").onclick=()=>go({v:"practice"});
 }
 
+
+/* ================= GUIDE QUESTION GENERATOR ================= */
+STUDY.gen=(STUDY.gen||[]).filter(c=>topOf(c.t));STUDY.gen.forEach(c=>c.s2=topOf(c.t).s);
+const SRCN={UIM:"Using Inventory Management",IMP:"Implementing Manufacturing and Supply Chain Materials Management"};
+const srcKey=c=>c.src.split(" ")[0];
+let gsetup={scope:"all",size:20,topic:"",src:"both"}, grun=null;
+function gmissed(){return store.get("genmissed")||[]}
+function gmark(id,ok){let m=new Set(gmissed());ok?m.delete(id):m.add(id);store.set("genmissed",[...m])}
+function gpool(scope,src){
+  let p=STUDY.gen;
+  if(src&&src!=="both") p=p.filter(c=>srcKey(c)===src);
+  if(scope==="missed"){const m=new Set(gmissed());return p.filter(c=>m.has(c.id))}
+  if(scope.startsWith("t:")) return p.filter(c=>c.t===scope.slice(2));
+  if(scope.startsWith("s:")) return p.filter(c=>c.s2===+scope.slice(2));
+  return p;
+}
+function makeQ(c){
+  let k=c.n;
+  if(!k){const max=Math.min(c.r.length,3),x=Math.random();k=max===1?1:max===2?(x<.5?1:2):(x<.4?1:x<.72?2:3)}
+  const nOpts=k===1?4:Math.min(5,k+c.w.length);
+  const right=shuffle(c.r).slice(0,k), wrong=shuffle(c.w).slice(0,nOpts-k);
+  const opts=shuffle([...right.map(t=>({t,ok:true})),...wrong.map(t=>({t,ok:false}))]);
+  return {c,k,opts,picked:[],done:false,ok:null};
+}
+function gstart(scope,size,src){
+  const pool=gpool(scope,src); if(!pool.length) return;
+  let list=[]; while(list.length<size){list=list.concat(shuffle(pool)); if(pool.length<3&&list.length>=pool.length*3) break}
+  grun={scope,size,src,qs:list.slice(0,size).map(makeQ),i:0};
+  go({v:"genrun"});
+}
+function gscopeLabel(s){return s==="all"?"All exam sections":s==="missed"?"Generated questions I got wrong":s.startsWith("t:")?topOf(s.slice(2)).title:STUDY.exam[+s.slice(2)].title}
+function renderGenSetup(){
+  const srcs=[["both","Both guides"],["UIM",SRCN.UIM],["IMP",SRCN.IMP]];
+  if(!gsetup.topic) gsetup.topic=(STUDY.gen[0]||{}).t||STUDY.topics[0].id;
+  const opts=[["all"],...STUDY.exam.map(x=>["s:"+x.i]),["missed"]];
+  $("#main").innerHTML=`${menuBtn}
+    <h1>Guide question generator</h1>
+    <p class="lede">Builds fresh multiple-choice questions from ${STUDY.gen.length} fact sets taken from the Oracle 26C guides <i>Using Inventory Management</i> and <i>Implementing Manufacturing and Supply Chain Materials Management</i>. Every run picks a different number of correct answers and a different set of distractors, so the same fact set rarely produces the same question twice. Each question tells you how many answers to choose; you only score when your selection is exactly right.</p>
+    <div class="panel"><h3>Source guide</h3><div class="seg" id="gsrc">${srcs.map(([k,l])=>`<button data-s="${k}" aria-pressed="${gsetup.src===k}">${l}</button>`).join("")}</div></div>
+    <div class="panel"><h3>What to practise</h3><div id="gscopes"></div>
+      <label class="choice"><input type="radio" name="gscope" value="topic" ${gsetup.scope==="topic"?"checked":""}>One exam topic:
+        <select id="gtop"></select></label></div>
+    <div class="panel"><h3>Number of questions</h3>
+      <div class="seg" id="gsize">${[10,20,30,50].map(n=>`<button data-n="${n}" aria-pressed="${gsetup.size===n}">${n}</button>`).join("")}</div>
+      <p class="note">If you ask for more questions than there are fact sets, fact sets are reused — with a different mix of answers.</p></div>
+    <div class="actions"><button class="primary" id="ggo">Generate</button></div>`;
+  const draw=()=>{
+    $("#gscopes").innerHTML=opts.map(([id])=>{const c=gpool(id,gsetup.src).length;return `<label class="choice"><input type="radio" name="gscope" value="${id}" ${gsetup.scope===id?"checked":""} ${c?"":"disabled"}>${gscopeLabel(id)}<span class="c">${c?c+" fact sets":"none"}</span></label>`}).join("");
+    $("#gtop").innerHTML=STUDY.exam.map(x=>`<optgroup label="${x.title}">${x.groups.flatMap(g=>g.topics).map(t=>{const c=gpool("t:"+t.id,gsetup.src).length;return `<option value="${t.id}" ${gsetup.topic===t.id?"selected":""} ${c?"":"disabled"}>${t.title} (${c})</option>`}).join("")}</optgroup>`).join("");
+    document.querySelectorAll("input[name=gscope]").forEach(r=>r.onchange=()=>gsetup.scope=r.value);
+  };
+  draw();
+  $("#gtop").onchange=e=>{gsetup.topic=e.target.value;gsetup.scope="topic";document.querySelector("input[name=gscope][value=topic]").checked=true};
+  document.querySelectorAll("#gsrc button").forEach(b=>b.onclick=()=>{gsetup.src=b.dataset.s;document.querySelectorAll("#gsrc button").forEach(x=>x.setAttribute("aria-pressed",x===b));draw()});
+  document.querySelectorAll("#gsize button").forEach(b=>b.onclick=()=>{gsetup.size=+b.dataset.n;document.querySelectorAll("#gsize button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  $("#ggo").onclick=()=>gstart(gsetup.scope==="topic"?"t:"+gsetup.topic:gsetup.scope,gsetup.size,gsetup.src);
+}
+function renderGenRun(){
+  const q=grun.qs[grun.i], n=grun.qs.length, correct=grun.qs.filter(x=>x.ok).length, multi=q.k>1;
+  $("#main").innerHTML=`${menuBtn}
+    <div class="run-top"><span>${gscopeLabel(grun.scope)}, question ${grun.i+1} of ${n}</span><span>${correct} correct</span></div>
+    <div class="bar"><i style="width:${(grun.i+(q.done?1:0))/n*100}%"></i></div>
+    <div class="q">
+      <span class="tag">${topOf(q.c.t).title}</span><br>
+      <span class="choose">Choose ${q.k}</span>
+      <p>${q.c.s}</p>
+      ${q.opts.map((o,j)=>{const p=q.picked.includes(j);let cls=multi?"":"radio";if(q.done){cls+=o.ok&&p?" right":!o.ok&&p?" wrong":o.ok?" missed":""}else if(p)cls+=" pick";
+        return `<button class="opt ${cls}" data-j="${j}" ${q.done?"disabled":""} aria-pressed="${p}"><span class="box"></span>${o.t}${q.done&&o.ok&&!p?" <b>(correct — not selected)</b>":""}</button>`}).join("")}
+      ${q.done?`<div class="explain ${q.ok?"":"no"}"><strong>${q.ok?"Correct.":"Not quite."}</strong> ${q.c.e}<div class="srcnote">Source: ${SRCN[srcKey(q.c)]} (26C), ${q.c.src.replace(/^\S+ /,"")}</div></div>`:`<p class="note" id="gsel">${q.picked.length} of ${q.k} selected</p>`}
+    </div>
+    <div class="actions">
+      ${q.done?`<button class="primary" id="gnext">${grun.i+1<n?"Next question":"See results"}</button>`:`<button class="primary" id="gsub" ${q.picked.length===q.k?"":"disabled"}>Submit answer</button>`}
+      <button class="secondary" id="gquit">End and see results</button>
+    </div>`;
+  if(!q.done) document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{const j=+b.dataset.j;
+    if(q.picked.includes(j)) q.picked=q.picked.filter(x=>x!==j);
+    else if(!multi) q.picked=[j];
+    else if(q.picked.length<q.k) q.picked.push(j);
+    else {$("#gsel").textContent=`You can choose only ${q.k}. Deselect one first.`;return}
+    renderGenRun()});
+  if(!q.done) $("#gsub").onclick=()=>{q.done=true;q.ok=q.picked.every(j=>q.opts[j].ok)&&q.picked.length===q.k;gmark(q.c.id,q.ok);renderGenRun();$("#gnext").focus()};
+  else $("#gnext").onclick=()=>{if(grun.i+1<n){grun.i++;renderGenRun()}else go({v:"genresult"})};
+  $("#gquit").onclick=()=>go({v:"genresult"});
+}
+function renderGenResult(){
+  const ans=grun.qs.filter(q=>q.done), ok=ans.filter(q=>q.ok).length, pct=ans.length?Math.round(ok/ans.length*100):0;
+  if(ans.length===grun.qs.length){const b=store.get("genbest")||{},key=grun.scope+"|"+grun.src;if(b[key]==null||pct>b[key]){b[key]=pct;store.set("genbest",b)}}
+  const byD={};ans.forEach(q=>{const d=byD[q.c.s2]||(byD[q.c.s2]={n:0,ok:0});d.n++;if(q.ok)d.ok++});
+  const multiN=ans.filter(q=>q.k>1), multiOk=multiN.filter(q=>q.ok).length;
+  const wrong=ans.filter(q=>!q.ok);
+  $("#main").innerHTML=`${menuBtn}
+    <h1>Results</h1><div class="big">${pct}%</div>
+    <p class="lede">${ok} of ${ans.length} answered fully correctly${ans.length<grun.qs.length?` (${grun.qs.length-ans.length} not answered)`:""}.${multiN.length?` Multiple-answer questions: ${multiOk} of ${multiN.length}.`:""}</p>
+    <div class="panel"><h3>By exam section</h3><div class="tbl"><table><tr><th>Exam section</th><th>Score</th></tr>
+      ${Object.entries(byD).map(([d,v])=>`<tr><td>${STUDY.exam[d].title}</td><td>${v.ok}/${v.n}</td></tr>`).join("")}</table></div></div>
+    ${wrong.length?`<h2>Review what you missed</h2>${wrong.map(q=>`<div class="miss"><b>${q.c.s} (Choose ${q.k})</b>Correct: ${q.opts.filter(o=>o.ok).map(o=>o.t).join("; ")}.<br>${q.c.e}</div>`).join("")}`:""}
+    <div class="actions"><button class="primary" id="gagain">Generate a new set</button><button class="secondary" id="gback">Change options</button></div>`;
+  $("#gagain").onclick=()=>gstart(grun.scope,grun.size,grun.src);
+  $("#gback").onclick=()=>go({v:"gen"});
+}
+
+document.querySelector(".nav-gen").onclick=()=>go({v:"gen"});
 document.querySelector(".nav-practice").onclick=()=>go({v:"practice"});
 document.querySelector(".nav-gloss").onclick=()=>go({v:"glossary"});
 const t=store.get("theme");if(t)document.documentElement.dataset.theme=t;
